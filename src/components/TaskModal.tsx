@@ -1,84 +1,82 @@
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import {
-  User,
-  X
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { X } from 'lucide-react';
+import type { Task, TaskFormData, TaskProject, TaskUser } from '../types/type';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../redux/store';
 
-// ========== TYPES ==========
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-interface Project {
-  _id: string;
-  name: string;
-}
-
-interface Task {
-  _id: string;
-  title: string;
-  description?: string;
-  status: 'Todo' | 'In-Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate?: string;
-  projectId: Project | string;
-  assignedTo?: User;
-  createdBy: User;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface TaskFormData {
-  title: string;
-  description: string;
-  status: 'Todo' | 'In-Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate: string;
-  projectId: string;
-  assignedTo: string;
-}
-
-
-// ========== TASK MODAL COMPONENT ==========
 const TaskModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   task?: Task | null;
   onSubmit: (data: TaskFormData) => void;
-  users: User[];
-  projects: Project[];
-}> = ({ isOpen, onClose, task, onSubmit, users, projects }) => {
+  users: TaskUser[];
+  projects: TaskProject[];
+}> = ({ isOpen, onClose, task, onSubmit, projects }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    setValue
+    setValue,
+    control
   } = useForm<TaskFormData>();
+  const role = useSelector((state: RootState) => state.auth?.role);
+  const isUser = role === "user";
 
+  const [availableMembers, setAvailableMembers] = useState<TaskUser[]>([]);
+
+  // Watch selected project dynamically
+  const selectedProjectId = useWatch({ control, name: "projectId" });
+
+  // Update available members when project changes (for new tasks)
+  useEffect(() => {
+    if (selectedProjectId && !task) {
+      const selectedProject = projects.find(p => p._id === selectedProjectId);
+      setAvailableMembers(selectedProject?.members || []);
+    }
+  }, [selectedProjectId, projects, task]);
+
+  // Populate form when editing a task
   useEffect(() => {
     if (task) {
-      setValue('title', task.title);
-      setValue('description', task.description || '');
-      setValue('status', task.status);
-      setValue('priority', task.priority);
-      setValue('dueDate', task.dueDate ? task.dueDate.split('T')[0] : '');
-      setValue('projectId', typeof task.projectId === 'string' ? task.projectId : task.projectId._id);
-      setValue('assignedTo', task.assignedTo?._id || '');
+      // Extract project ID
+      const pid = typeof task.projectId === "string" ? task.projectId : task.projectId._id;
+
+      // STEP 1: Set available members FIRST
+      const selectedProject = projects.find(p => p._id === pid);
+      const members = selectedProject?.members || [];
+      setAvailableMembers(members);
+
+      // STEP 2: Set all form values
+      setValue("title", task.title);
+      setValue("description", task.description || "");
+      setValue("status", task.status);
+      setValue("priority", task.priority);
+      setValue("dueDate", task.dueDate ? task.dueDate.split("T")[0] : "");
+      setValue("projectId", pid);
+
+      // STEP 3: Set assignedTo AFTER members are set
+      // Use setTimeout to ensure DOM has updated with new options
+      setTimeout(() => {
+        const assignedUserId = task.assignedTo?._id || "";
+        setValue("assignedTo", assignedUserId);
+        console.log("Setting assignedTo:", assignedUserId);
+      }, 0);
+
     } else {
+      // Reset form for new task
       reset();
+      setAvailableMembers([]);
     }
-  }, [task, setValue, reset]);
+  }, [task, setValue, reset, projects]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="bg-linear-to-r from-blue-600 to-blue-700 p-6 flex justify-between items-center">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-white">
             {task ? 'Edit Task' : 'Create New Task'}
           </h2>
@@ -129,8 +127,11 @@ const TaskModal: React.FC<{
                 Project *
               </label>
               <select
-                {...register('projectId', { required: 'Project is required' })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                {...register("projectId", { required: "Project is required" })}
+                disabled={isUser}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg 
+                ${isUser ? "bg-gray-100 cursor-not-allowed" : "focus:ring-2 focus:ring-blue-500"} 
+                focus:border-transparent outline-none`}
               >
                 <option value="">Select Project</option>
                 {projects.map(project => (
@@ -179,39 +180,76 @@ const TaskModal: React.FC<{
               </label>
               <input
                 type="date"
-                {...register('dueDate')}
+                {...register('dueDate', {
+                  validate: (value) => {
+                    if (!value) return true;
+                    const selectedDate = new Date(value);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return selectedDate >= today || 'Due date cannot be before today';
+                  },
+                })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
+              {errors.dueDate && (
+                <p className="mt-1 text-sm text-red-600">{errors.dueDate.message}</p>
+              )}
             </div>
           </div>
 
           {/* Assigned To */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Assign To
+              Assign To *
             </label>
             <select
-              {...register('assignedTo')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              {...register("assignedTo", {
+                required: "Assigned user is required",
+              })}
+              disabled={isUser || !selectedProjectId}
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg 
+                ${isUser || !selectedProjectId
+                  ? "bg-gray-100 cursor-not-allowed"
+                  : "focus:ring-2 focus:ring-blue-500"
+                } 
+                focus:border-transparent outline-none`}
             >
-              <option value="">Unassigned</option>
-              {users.map(user => (
-                <option key={user._id} value={user._id}>
-                  {user.name}
+              <option value="">Select Member</option>
+              {availableMembers.length > 0 ? (
+                availableMembers.map((member) => (
+                  <option key={member._id} value={member._id}>
+                    {member.name} {member.email && `(${member.email})`}
+                  </option>
+                ))
+              ) : (
+                <option disabled>
+                  {selectedProjectId ? "No members in this project" : "Select a project first"}
                 </option>
-              ))}
+              )}
             </select>
+            {errors.assignedTo && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.assignedTo.message}
+              </p>
+            )}
+            {isUser && (
+              <p className="mt-1 text-sm text-blue-600">
+                You cannot change the assigned user
+              </p>
+            )}
           </div>
 
           {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <button
+              type="button"
               onClick={handleSubmit(onSubmit)}
               className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
             >
               {task ? 'Update Task' : 'Create Task'}
             </button>
             <button
+              type="button"
               onClick={onClose}
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
             >
@@ -224,5 +262,4 @@ const TaskModal: React.FC<{
   );
 };
 
-
-export default TaskModal
+export default TaskModal;

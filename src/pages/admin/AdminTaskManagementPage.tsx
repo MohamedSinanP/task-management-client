@@ -15,72 +15,38 @@ import AdminSidebar from "../../components/AdminSidebar";
 import toast from "react-hot-toast";
 import { confirmToast } from "../../utils/toastConfirmation";
 import { useTaskSocket } from "../../hooks/useTaskSocket";
+import type { Task, TaskFormData, TaskProject, TaskUser } from "../../types/type";
 
-// ========== TYPES ==========
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-interface Project {
-  _id: string;
-  name: string;
-}
-
-interface Task {
-  _id: string;
-  title: string;
-  description?: string;
-  status: "Todo" | "In-Progress" | "Done";
-  priority: "Low" | "Medium" | "High";
-  dueDate?: string;
-  projectId: Project | string;
-  assignedTo?: User;
-  createdBy: User;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface TaskFormData {
-  title: string;
-  description: string;
-  status: "Todo" | "In-Progress" | "Done";
-  priority: "Low" | "Medium" | "High";
-  dueDate: string;
-  projectId: string;
-  assignedTo: string;
-}
-
-// ========== MAIN COMPONENT ==========
 export default function AdminTaskManagementPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<TaskUser[]>([]);
+  const [projects, setProjects] = useState<TaskProject[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [viewingTask, setViewingTask] = useState<Task | null>(null);
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [dragOverColumn, setDragOverColumn] = useState<Task["status"] | null>(
-    null
-  );
+  const [dragOverColumn, setDragOverColumn] = useState<Task["status"] | null>(null);
 
   const taskIds = tasks.map(t => t._id);
+
   useTaskSocket(
     taskIds,
     (newTask) => {
-      setTasks(prev => [...prev, newTask]);
-      toast.success(`New task created`);
+      // Only add if not already in list (prevents duplicates)
+      setTasks(prev => {
+        const exists = prev.some(t => t._id === newTask._id);
+        return exists ? prev : [...prev, newTask];
+      });
     },
     (updatedTask) => {
       setTasks(prev => prev.map(t => t._id === updatedTask._id ? updatedTask : t));
     },
     (taskId) => {
       setTasks(prev => prev.filter(t => t._id !== taskId));
-      toast.success("Task deleted");
     }
   );
+
   // ======= Fetch Data =======
   useEffect(() => {
     (async () => {
@@ -107,14 +73,18 @@ export default function AdminTaskManagementPage() {
     try {
       setLoading(true);
       if (selectedTask) {
-        const res = await updateTask(selectedTask._id, data);
-        setTasks((prev) =>
-          prev.map((t) => (t._id === selectedTask._id ? res.task : t))
-        );
+        // Update existing task
+        await updateTask(selectedTask._id, data);
+        // DON'T manually update state - let socket handle it
         toast.success("Task updated successfully");
       } else {
+        // Create new task
         const res = await createTask(data);
-        setTasks((prev) => [...prev, res.task]);
+        // For create, we can manually add since socket might not emit to self
+        setTasks((prev) => {
+          const exists = prev.some(t => t._id === res.task._id);
+          return exists ? prev : [...prev, res.task];
+        });
         toast.success("Task created successfully");
       }
       setIsModalOpen(false);
@@ -132,7 +102,7 @@ export default function AdminTaskManagementPage() {
       try {
         setLoading(true);
         await deleteTask(id);
-        setTasks((prev) => prev.filter((t) => t._id !== id));
+        // DON'T manually update state - let socket handle it
         toast.success("Task deleted successfully");
       } catch (error: any) {
         toast.error(error.response?.data?.message || "Failed to delete task");
@@ -152,10 +122,8 @@ export default function AdminTaskManagementPage() {
   const handleDrop = async (newStatus: Task["status"]) => {
     if (!draggedTaskId) return;
     try {
-      const res = await updateTaskStatus(draggedTaskId, newStatus);
-      setTasks((prev) =>
-        prev.map((t) => (t._id === draggedTaskId ? res.task : t))
-      );
+      await updateTaskStatus(draggedTaskId, newStatus);
+      // DON'T manually update state - let socket handle it
       toast.success(`Task moved to ${newStatus}`);
     } catch {
       toast.error("Failed to update task status");

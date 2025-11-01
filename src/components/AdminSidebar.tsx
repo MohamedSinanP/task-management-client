@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { removeAuth } from "../redux/slices/authSlice";
 import { logout } from "../apis/auth";
 import toast from "react-hot-toast";
+import Notifications from "./Notifications";
 
 export default function AdminSidebar() {
   const navigate = useNavigate();
@@ -34,12 +35,21 @@ export default function AdminSidebar() {
       {/* ---------- Mobile Toggle ---------- */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 text-gray-800 bg-white rounded-lg p-2 shadow"
+        className="md:hidden fixed top-4 right-4 z-50 text-white bg-blue-500 rounded-lg p-2 shadow"
         aria-label="Toggle sidebar"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M4 6h16M4 12h16M4 18h16" />
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h16M4 18h16"
+          />
         </svg>
       </button>
 
@@ -53,7 +63,8 @@ export default function AdminSidebar() {
       >
         {/* ---- Header + Notification Bell ---- */}
         <div className="flex items-center justify-between p-6 border-b border-blue-800">
-          <h1 className="text-2xl font-bold">Admin Panel</h1>
+          <h1 className="text-2xl font-bold mr-2">Admin Panel</h1>
+          <Notifications />
         </div>
 
         {/* ---- Navigation ---- */}

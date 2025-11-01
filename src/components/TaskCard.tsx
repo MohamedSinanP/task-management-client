@@ -2,33 +2,9 @@ import React from 'react';
 import {
   Edit2, Trash2, User, Calendar
 } from 'lucide-react';
+import type { Task } from '../types/type';
 
-// ========== TYPES ==========
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
 
-interface Project {
-  _id: string;
-  name: string;
-}
-
-interface Task {
-  _id: string;
-  title: string;
-  description?: string;
-  status: 'Todo' | 'In-Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate?: string;
-  projectId: Project | string;
-  assignedTo?: User;
-  createdBy: User;
-  createdAt: string;
-  updatedAt: string;
-}
-// ========== TASK CARD COMPONENT (WITH DRAG) ==========
 const TaskCard: React.FC<{
   task: Task;
   onEdit: (task: Task) => void;

@@ -3,10 +3,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import type { RootState } from "../redux/store";
 import { useEffect, useState } from "react";
-
-interface PrivateRouteProps {
-  allowedRoles?: string[];
-}
+import type { PrivateRouteProps } from "../types/type";
 
 export default function PrivateRoute({ allowedRoles }: PrivateRouteProps) {
   const { role } = useSelector((state: RootState) => state.auth);

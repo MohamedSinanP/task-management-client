@@ -1,46 +1,18 @@
 import React from 'react';
-import {
-  User
-} from 'lucide-react';
 import TaskCard from './TaskCard';
-
-// ========== TYPES ==========
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-interface Project {
-  _id: string;
-  name: string;
-}
-
-interface Task {
-  _id: string;
-  title: string;
-  description?: string;
-  status: 'Todo' | 'In-Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate?: string;
-  projectId: Project | string;
-  assignedTo?: User;
-  createdBy: User;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { KanbanTask } from '../types/type';
 
 
 
 const KanbanColumn: React.FC<{
   title: string;
-  status: Task['status'];
-  tasks: Task[];
-  onEdit: (task: Task) => void;
+  status: KanbanTask['status'];
+  tasks: KanbanTask[];
+  onEdit: (task: KanbanTask) => void;
   onDelete?: (id: string) => void;
-  onView: (task: Task) => void;
+  onView: (task: KanbanTask) => void;
   onDragStart: (taskId: string) => void;
-  onDrop: (status: Task['status']) => void;
+  onDrop: (status: KanbanTask['status']) => void;
   isDraggingOver: boolean;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;

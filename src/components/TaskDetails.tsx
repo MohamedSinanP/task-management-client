@@ -1,33 +1,8 @@
 import React from 'react';
 import {
-  Edit2, User
+  Edit2
 } from 'lucide-react';
-
-// ========== TYPES ==========
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-interface Project {
-  _id: string;
-  name: string;
-}
-
-interface Task {
-  _id: string;
-  title: string;
-  description?: string;
-  status: 'Todo' | 'In-Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate?: string;
-  projectId: Project | string;
-  assignedTo?: User;
-  createdBy: User;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Task } from '../types/type';
 
 const TaskDetails: React.FC<{
   task: Task;

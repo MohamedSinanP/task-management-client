@@ -1,61 +1,8 @@
+import type { CreateTaskPayload, TaskResponse, TasksResponse, UpdateTaskPayload } from "../types/type";
 import api from "./api";
 
-// ========== TYPES ==========
-export interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-}
-
-export interface Project {
-  _id: string;
-  name: string;
-}
-
-export interface Task {
-  _id: string;
-  title: string;
-  description?: string;
-  status: 'Todo' | 'In-Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate?: string;
-  projectId: Project | string;
-  assignedTo?: User;
-  createdBy: User;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateTaskPayload {
-  title: string;
-  description?: string;
-  status: 'Todo' | 'In-Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High';
-  dueDate?: string;
-  projectId: string;
-  assignedTo: string;
-}
-
-export interface UpdateTaskPayload {
-  title?: string;
-  description?: string;
-  status?: 'Todo' | 'In-Progress' | 'Done';
-  priority?: 'Low' | 'Medium' | 'High';
-  dueDate?: string;
-  assignedTo?: string;
-}
-
-export interface TaskResponse {
-  message: string;
-  task: Task; // ✅ fixed
-}
-
-export interface TasksResponse {
-  tasks: Task[];
-}
-
 // ========== TASK APIs ==========
+
 export const createTask = async (
   data: CreateTaskPayload
 ): Promise<TaskResponse> => {

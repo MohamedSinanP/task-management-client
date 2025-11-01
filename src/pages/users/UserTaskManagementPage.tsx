@@ -11,43 +11,12 @@ import {
 } from "../../apis/task";
 import { getAllProjects, getAllUsers } from "../../apis/admin";
 import { useTaskSocket } from "../../hooks/useTaskSocket";
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-}
-interface Project {
-  _id: string;
-  name: string;
-}
-interface Task {
-  _id: string;
-  title: string;
-  description?: string;
-  status: "Todo" | "In-Progress" | "Done";
-  priority: "Low" | "Medium" | "High";
-  dueDate?: string;
-  projectId: Project | string;
-  assignedTo?: User;
-  createdBy: User;
-  createdAt: string;
-  updatedAt: string;
-}
-interface TaskFormData {
-  title: string;
-  description: string;
-  status: "Todo" | "In-Progress" | "Done";
-  priority: "Low" | "Medium" | "High";
-  dueDate: string;
-  projectId: string;
-  assignedTo: string;
-}
+import type { Task, TaskFormData, TaskProject, TaskUser } from "../../types/type";
 
 export default function UserTaskManagementPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<TaskUser[]>([]);
+  const [projects, setProjects] = useState<TaskProject[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -55,8 +24,8 @@ export default function UserTaskManagementPage() {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<Task["status"] | null>(null);
 
-
   const taskIds = tasks.map(t => t._id);
+
   // Listen to socket events
   useTaskSocket(
     taskIds,
@@ -68,8 +37,6 @@ export default function UserTaskManagementPage() {
       setTasks(prev => prev.map(t => t._id === updatedTask._id ? updatedTask : t));
     },
     (taskId) => {
-      console.log("this is the data", taskId);
-
       setTasks(prev => prev.filter(t => t._id !== taskId._id));
       toast.success("Task deleted by admin");
     }
@@ -101,10 +68,9 @@ export default function UserTaskManagementPage() {
     if (!selectedTask) return;
     try {
       setLoading(true);
-      const res = await updateTask(selectedTask._id, data);
-      setTasks((prev) =>
-        prev.map((t) => (t._id === selectedTask._id ? res.task : t))
-      );
+      await updateTask(selectedTask._id, data);
+      // DON'T manually update state here - let the socket handle it
+      // The socket will emit TASK_UPDATED event and useTaskSocket will update the state
       toast.success("Task updated");
       setIsModalOpen(false);
       setSelectedTask(null);
@@ -125,10 +91,8 @@ export default function UserTaskManagementPage() {
   const handleDrop = async (newStatus: Task["status"]) => {
     if (!draggedTaskId) return;
     try {
-      const res = await updateTaskStatus(draggedTaskId, newStatus);
-      setTasks((prev) =>
-        prev.map((t) => (t._id === draggedTaskId ? res.task : t))
-      );
+      await updateTaskStatus(draggedTaskId, newStatus);
+      // DON'T manually update state here either - let the socket handle it
       toast.success(`Moved to ${newStatus}`);
     } catch {
       toast.error("Failed to move task");

@@ -121,7 +121,7 @@ const ProjectAddOrEditModal: React.FC<{
           {/* Members Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Team Members
+              Team Members *
             </label>
             <div className="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto space-y-2">
               {users.map(user => (
@@ -131,6 +131,11 @@ const ProjectAddOrEditModal: React.FC<{
                 >
                   <input
                     type="checkbox"
+                    value={user._id}
+                    {...register("members", {
+                      validate: (value) =>
+                        (value && value.length > 0) || "At least one member must be selected",
+                    })}
                     checked={selectedMembers.includes(user._id)}
                     onChange={() => toggleMember(user._id)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
@@ -142,6 +147,12 @@ const ProjectAddOrEditModal: React.FC<{
                 </label>
               ))}
             </div>
+
+            {/* Error Message */}
+            {errors.members && (
+              <p className="mt-1 text-sm text-red-600">{errors.members.message}</p>
+            )}
+
             <p className="mt-2 text-sm text-gray-500">
               {selectedMembers.length} member(s) selected
             </p>

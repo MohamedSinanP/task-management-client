@@ -4,16 +4,22 @@ import ProjectAddOrEditModal from '../../components/ProjectAddOrEditModal';
 import ProjectCard from '../../components/ProjectCard';
 import ProjectDetails from '../../components/ProjectDetails';
 import AdminSidebar from '../../components/AdminSidebar';
+import Pagination from '../../components/Pagination';
 import {
   getAllUsers,
-  getAllProjects,
+  getPaginatedProjects,
   createProject,
   updateProject,
   deleteProject,
 } from '../../apis/admin';
 import toast from 'react-hot-toast';
 import { confirmToast } from '../../utils/toastConfirmation';
-import type { ProjectFormData, Project, User } from '../../types/type';
+import type {
+  ProjectFormData,
+  Project,
+  User,
+  PaginationInfo
+} from '../../types/type';
 
 export default function ProjectManagementPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -22,25 +28,52 @@ export default function ProjectManagementPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [viewingProject, setViewingProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 9,
+  });
 
-  // Fetch Users & Projects
+  // Fetch Users (once)
   useEffect(() => {
-    (async () => {
+    const fetchUsers = async () => {
       try {
-        setLoading(true);
-        const [usersRes, projectsRes] = await Promise.all([
-          getAllUsers(),
-          getAllProjects(),
-        ]);
+        const usersRes = await getAllUsers();
         setUsers(usersRes.users || []);
-        setProjects(projectsRes.projects || []);
       } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Failed to load data');
-      } finally {
-        setLoading(false);
+        toast.error(error.response?.data?.message || 'Failed to load users');
       }
-    })();
+    };
+    fetchUsers();
   }, []);
+
+  // Fetch Projects with Pagination
+  const fetchProjects = async (page: number = 1, limit: number = 9) => {
+    try {
+      setLoading(true);
+      const projectsRes = await getPaginatedProjects(page, limit);
+      setProjects(projectsRes.projects || []);
+      setPagination(projectsRes.pagination);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to load projects');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects(pagination.currentPage, pagination.itemsPerPage);
+  }, []);
+
+  // Pagination Handlers
+  const handlePageChange = (page: number) => {
+    fetchProjects(page, pagination.itemsPerPage);
+  };
+
+  const handleItemsPerPageChange = (items: number) => {
+    fetchProjects(1, items);
+  };
 
   // Create / Update Project
   const handleCreateOrUpdate = async (data: ProjectFormData) => {
@@ -50,14 +83,14 @@ export default function ProjectManagementPage() {
       if (selectedProject) {
         // Update existing project
         const res = await updateProject(selectedProject._id, data);
-        setProjects(prev =>
-          prev.map(p => (p._id === selectedProject._id ? res.project : p))
-        );
+        // Refresh current page
+        await fetchProjects(pagination.currentPage, pagination.itemsPerPage);
         toast.success('Project updated successfully');
       } else {
         // Create new project
-        const res = await createProject(data);
-        setProjects(prev => [...prev, res.project]);
+        await createProject(data);
+        // Go to first page to see new project
+        await fetchProjects(1, pagination.itemsPerPage);
         toast.success('Project created successfully');
       }
 
@@ -76,7 +109,13 @@ export default function ProjectManagementPage() {
       try {
         setLoading(true);
         await deleteProject(id);
-        setProjects(prev => prev.filter(p => p._id !== id));
+
+        // If current page becomes empty after deletion, go to previous page
+        const remainingItems = pagination.totalItems - 1;
+        const maxPage = Math.ceil(remainingItems / pagination.itemsPerPage);
+        const targetPage = pagination.currentPage > maxPage ? maxPage : pagination.currentPage;
+
+        await fetchProjects(Math.max(1, targetPage), pagination.itemsPerPage);
         toast.success('Project deleted successfully');
       } catch (error: any) {
         toast.error(error.response?.data?.message || 'Failed to delete project');
@@ -103,7 +142,7 @@ export default function ProjectManagementPage() {
       <AdminSidebar />
 
       {/* Main Content */}
-      <div className="flex-1 md:ml-64">
+      <div className="flex-1 md:ml-64 flex flex-col">
         {/* Header */}
         <div className="bg-white shadow-sm border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
@@ -112,7 +151,7 @@ export default function ProjectManagementPage() {
         </div>
 
         {/* Content Area */}
-        <div className="p-6 overflow-y-auto" style={{ height: 'calc(100vh - 73px)' }}>
+        <div className="flex-1 p-6 overflow-y-auto">
           {loading ? (
             <div className="text-center py-20 text-gray-500">Loading...</div>
           ) : viewingProject ? (
@@ -151,7 +190,7 @@ export default function ProjectManagementPage() {
               </div>
 
               {/* No Projects */}
-              {projects.length === 0 && (
+              {projects.length === 0 && !loading && (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">
                     No projects yet. Create your first project!
@@ -161,6 +200,20 @@ export default function ProjectManagementPage() {
             </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {!loading && !viewingProject && projects.length > 0 && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            itemsPerPage={pagination.itemsPerPage}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            showItemsPerPage={true}
+            itemsPerPageOptions={[9, 18, 27, 36]}
+          />
+        )}
       </div>
 
       {/* Project Modal */}

@@ -2,9 +2,12 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
 import authReducer from "./slices/authSlice";
+import socketReducer from "./slices/socketSlice";
+import { socketMiddleware } from "./middleware/socketMiddleware";
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  socket: socketReducer,
 });
 
 const persistConfig = {
@@ -20,7 +23,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }),
+    }).concat(socketMiddleware),
 });
 
 export const persistor = persistStore(store);
