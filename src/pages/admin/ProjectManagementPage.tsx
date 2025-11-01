@@ -81,15 +81,11 @@ export default function ProjectManagementPage() {
       setLoading(true);
 
       if (selectedProject) {
-        // Update existing project
-        const res = await updateProject(selectedProject._id, data);
-        // Refresh current page
+        await updateProject(selectedProject._id, data);
         await fetchProjects(pagination.currentPage, pagination.itemsPerPage);
         toast.success('Project updated successfully');
       } else {
-        // Create new project
         await createProject(data);
-        // Go to first page to see new project
         await fetchProjects(1, pagination.itemsPerPage);
         toast.success('Project created successfully');
       }

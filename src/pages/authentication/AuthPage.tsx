@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { addAuth } from '../../redux/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
-import type { SignupFormData } from '../../types/type';
+import type { LoginFormData, SignupFormData } from '../../types/type';
 
 
 
@@ -30,7 +30,7 @@ export default function AuthPages() {
     handleSubmit: handleSubmitLogin,
     formState: { errors: loginErrors },
     reset: resetLogin,
-  } = useForm<LoginF>();
+  } = useForm<LoginFormData>();
 
   const onSignupSubmit = async (data: SignupFormData) => {
     try {
