@@ -1,73 +1,146 @@
-# React + TypeScript + Vite
+# 🧩 Task Management Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the **frontend** of the Task Management System — a React + TypeScript application built with **Vite**.  
+It provides a modern, responsive, and role-based interface for managing projects, tasks, and activity logs.
 
-Currently, two official plugins are available:
+The app connects to a backend API (deployed on Render) and handles authentication, real-time updates, and secure session management.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🚀 Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- ⚛️ **React 19** (with TypeScript)
+- ⚙️ **Vite 7** for lightning-fast builds
+- 🧭 **React Router DOM v7** for routing
+- 🧱 **Redux Toolkit + Redux Persist** for global state management
+- 🧩 **React Hook Form** for form validation
+- 🌈 **Tailwind CSS** for styling
+- 🔥 **React Hot Toast** for notifications
+- 💬 **Socket.io Client** for real-time features
+- 📦 **Axios** for API requests
+- 🎨 **Lucide React** for icons
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## ⚙️ Environment Variables
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Create a `.env` file in your project root with the following variables:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+```env
+# Backend API base URL
+VITE_API_BASE_URL=http://localhost:3001/api
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Optional: base URL without /api
+VITE_API_URL=http://localhost:3001
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+When deploying to production (e.g., Vercel), replace these with your live backend URLs:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_API_BASE_URL=https://your-backend.onrender.com/api
+VITE_API_URL=https://your-backend.onrender.com
 ```
+
+---
+
+## 🧠 Features
+
+- 🔐 Secure authentication (Access + Refresh Tokens)
+- 👤 Role-based access (Admin / User)
+- 🧾 Task & Project management dashboard
+- 🪄 Real-time task updates via Socket.io
+- 🧰 Form validation using React Hook Form
+- 💾 Persisted authentication with Redux Persist
+- 📅 Automated reminders (via backend cron jobs)
+- 🧾 Activity logs for every update
+- 🌗 Fully responsive and clean UI with Tailwind CSS
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+├── apis/                # Axios API functions
+├── components/          # Reusable UI components
+├── hooks/               # Custom React hooks
+├── pages/               # Route-level pages (Auth, Admin, User)
+├── redux/               # Redux store, slices, and reducers
+├── types/               # TypeScript interfaces and types
+├── utils/               # Helper and utility functions
+└── main.tsx             # Entry point
+```
+
+---
+
+## 🛠️ Installation & Setup
+
+### 1️⃣ Clone the repository
+
+```bash
+git clone https://github.com/MohamedSinanP/task-management-client.git
+cd task-management-client
+```
+
+### 2️⃣ Install dependencies
+
+```bash
+npm install
+# or
+yarn install
+```
+
+### 3️⃣ Create `.env` file
+
+Copy the environment variables above into a `.env` file at the project root.
+
+### 4️⃣ Run the development server
+
+```bash
+npm run dev
+```
+
+The app will be available at [http://localhost:5173](http://localhost:5173)
+
+---
+
+## 🧱 Build for Production
+
+```bash
+npm run build
+```
+
+To preview the build locally:
+
+```bash
+npm run preview
+```
+
+---
+
+## 🌐 Deployment (Vercel)
+
+1. Push your code to GitHub.
+2. Go to [Vercel](https://vercel.com) and import the repository.
+3. In the project settings → **Environment Variables**, add:
+   ```
+   VITE_API_BASE_URL=https://your-backend.onrender.com/api
+   VITE_API_URL=https://your-backend.onrender.com
+   ```
+4. Click **Deploy** 🎉
+
+---
+
+## 👨‍💻 Author
+
+**Mohamed Sinan P**  
+MERN Stack Developer  
+📧[mohamedsinanp8@gmail.com]
+
+---
+
+## 🪪 License
+
+This project is licensed under the **MIT License** — feel free to modify and use it.
+
+---
