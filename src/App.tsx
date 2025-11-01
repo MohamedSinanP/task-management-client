@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import AuthPages from './pages/authentication/AuthPage'
 import ProjectManagementPage from './pages/admin/ProjectManagementPage'
 import PrivateRoute from './components/PrivateRoute'
@@ -8,22 +8,28 @@ import ActivityLogs from './pages/admin/ActiveLogs'
 
 const App = () => {
   return (
-    <>
-      <Routes>
-        <Route path='/auth' element={<AuthPages />} />
-        <Route path="*" element={<h2>Page Not Found</h2>} />
-        { /* Routes related to the admin */}
-        <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
-          <Route path='/admin/projects' element={<ProjectManagementPage />} />
-          <Route path='/admin/tasks' element={<AdminTaskManagementPage />} />
-          <Route path='/admin/active-logs' element={<ActivityLogs />} />
-        </Route>
-        { /* Routes related to the user */}
-        <Route element={<PrivateRoute allowedRoles={["user"]} />}>
-          <Route path='/tasks' element={<UserTaskManagementPage />} />
-        </Route>
-      </Routes>
-    </>
+    <Routes>
+      {/* Default redirect */}
+      <Route path="/" element={<Navigate to="/auth" replace />} />
+
+      {/* Auth page */}
+      <Route path="/auth" element={<AuthPages />} />
+
+      {/* Admin routes */}
+      <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+        <Route path="/admin/projects" element={<ProjectManagementPage />} />
+        <Route path="/admin/tasks" element={<AdminTaskManagementPage />} />
+        <Route path="/admin/active-logs" element={<ActivityLogs />} />
+      </Route>
+
+      {/* User routes */}
+      <Route element={<PrivateRoute allowedRoles={["user"]} />}>
+        <Route path="/tasks" element={<UserTaskManagementPage />} />
+      </Route>
+
+      {/* Fallback 404 */}
+      <Route path="*" element={<h2>Page Not Found</h2>} />
+    </Routes>
   )
 }
 
