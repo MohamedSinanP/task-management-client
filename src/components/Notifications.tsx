@@ -28,23 +28,11 @@ const Notifications: React.FC = () => {
     socket.on("newNotification", (n: NotificationItem) => {
       setList((p) => [n, ...p]);
       setUnread((p) => p + 1);
-
-      if (Notification.permission === "granted") {
-        new Notification("New Task Update", {
-          body: n.message,
-          icon: "/notification-icon.png",
-        });
-      }
     });
 
     return () => {
       socket.off("newNotification");
     };
-  }, []);
-
-  /* ---------- PERMISSION ---------- */
-  useEffect(() => {
-    if (Notification.permission === "default") Notification.requestPermission();
   }, []);
 
   /* ---------- INITIAL LOAD ---------- */
