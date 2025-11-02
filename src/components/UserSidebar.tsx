@@ -25,7 +25,7 @@ export default function UserSidebar() {
   };
 
   const menuItems = [
-    { name: "Tasks", path: "/admin/tasks", icon: <Home size={20} /> },
+    { name: "Tasks", path: "/tasks", icon: <Home size={20} /> },
   ];
 
   return (
