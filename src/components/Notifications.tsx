@@ -22,9 +22,6 @@ const Notifications: React.FC = () => {
     const socket = getSocket();
     if (!socket) return;
 
-    const uid = localStorage.getItem("userId");
-    if (uid) socket.emit("joinUser", uid);
-
     socket.on("newNotification", (n: NotificationItem) => {
       setList((p) => [n, ...p]);
       setUnread((p) => p + 1);

@@ -43,7 +43,7 @@ export default function AdminTaskManagementPage() {
       setTasks(prev => prev.map(t => t._id === updatedTask._id ? updatedTask : t));
     },
     (taskId) => {
-      setTasks(prev => prev.filter(t => t._id !== taskId));
+      setTasks(prev => prev.filter(t => t._id !== taskId._id));
     }
   );
 
